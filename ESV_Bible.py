@@ -164,6 +164,7 @@ def fetch_html_content(book_key, chapter_num):
             "include-footnotes": "true",
             "include-footnote-body": "true",
             "include-crossrefs": "true",
+            "include-short-copyright": "false",
         }
         try:
             time.sleep(random.uniform(2.0, 5.0))
@@ -188,8 +189,24 @@ def fetch_html_content(book_key, chapter_num):
     if passages and isinstance(passages, list) and len(passages) > 0:
         # Clean passage to remove literal \n and empty lines
         raw_html = passages[0]
-        cleaned_html = "\n".join(line for line in raw_html.splitlines() if line.strip())
-        # cleaned_html = raw_html
+        # 1. Parse the HTML immediately
+        soup = BeautifulSoup(raw_html, "html.parser")
+
+        # 2. *** NEW: Find and remove the copyright paragraph ***
+        # The copyright is contained in an <a> tag with class='copyright'.
+        copyright_tag = soup.find('a', class_='copyright')
+        
+        if copyright_tag and copyright_tag.parent:
+            # The parent of the <a> is the <p> tag that contains the entire notice.
+            # We use decompose() to remove the tag and its contents from the DOM.
+            copyright_tag.parent.decompose()
+        # *******************************************************
+
+        # 3. Clean the remaining passage content (now without the copyright)
+        # We need to turn the modified soup back into a string to apply the original line cleaning
+        cleaned_html = str(soup)
+        # Clean passage to remove literal \n and empty lines
+        cleaned_html = "\n".join(line for line in cleaned_html.splitlines() if line.strip())
         return BeautifulSoup(cleaned_html, "html.parser")
     else:
         # Check if the query was for a chapter that doesn't exist (e.g., Jude 2)
@@ -520,32 +537,6 @@ def parse_chapter_html(html_soup, book_name_short, chapter_num):
         "footnotes": all_footnotes
     }
 
-def replace_placeholders_in_text(text, footnote_placeholders, crossref_placeholders, inline_crossref_markers, book_name_short, chapter_num):
-    """Replaces placeholder strings with their formatted Obsidian links."""
-    # Footnote placeholders: [[FN_PLACEHOLDER:fn_id:word_before]] -> [[Footnotes for Book Chapter#fn_id|word_before]]
-    def replace_fn(match):
-        fn_id = match.group(1)
-        word_before = match.group(2)
-        return f"[[Footnotes for {book_name_short} {chapter_num}#{fn_id}|{word_before}]]"
-
-    text = re.sub(r'\[\[FN_PLACEHOLDER:([^:]+):([^\]]*)\]\]', replace_fn, text)
-
-    # Cross-reference inline placeholders: [[CR_INLINE_PLACEHOLDER:unique_id]] -> <sup>inline_marker</sup>
-    def replace_cr_inline(match):
-        ph_id = match.group(1)
-        inline_marker = inline_crossref_markers.get(ph_id, "")
-        if inline_marker:
-            return f"<sup>{inline_marker}</sup>"
-        return "" # Fallback if marker not found
-
-    text = re.sub(r'\[\[CR_INLINE_PLACEHOLDER:([^\]]+)\]\]', replace_cr_inline, text)
-
-    # Cross-reference block placeholders (these are handled by build_crossref_block, so they shouldn't be in text)
-    # This regex is for safety, if any [[CR_PLACEHOLDER:unique_id]] somehow remains in the text.
-    text = re.sub(r'\[\[CR_PLACEHOLDER:([^\]]+)\]\]', '', text) # Remove any remaining block placeholders from inline text
-
-    return text
-
 # --- Navigation Logic ---
 def get_chapter_navigation(book_key, chapter_num, total_chapters_in_book):
     """
@@ -818,7 +809,7 @@ def build_crossref_block(crossrefs_dict, book_name_short, chapter_num):
     if not crossrefs_dict:
         return ""
 
-    lines = ["> [!tip]- Cross References"]
+    lines = ["> [!cross-references]- Cross References"]
     last_book_in_block = book_name_short  # Initialize with current book
 
     for reph_id, raw_title in sorted(crossrefs_dict.items(), key=lambda x: int(x[0])):
@@ -961,23 +952,3 @@ def main():
             book_title = book_key.split(" ", 1)[1]
             book_name_short = book_key.split(" ", 1)[1]
             
-            # Define expected output file path for the main chapter file
-            chapter_file = Path(BASE_FOLDER) / book_key / f"{book_name_short} {1}.md" # Check for chapter 1 existence
-
-            # Only skip if the first chapter of the book exists, assuming full book was processed
-            # For more robust skipping, you might check all chapter files or use a manifest
-            if chapter_file.exists():
-                print(f"👍 Skipping Book {book_name_short} (first chapter already exists)")
-                continue
-
-            print(f"\nProcessing Book: 📘 {book_title} with {ch_count} Chapters")
-            for chapter_num in range(1, ch_count + 1):
-                try:
-                    build_chapter(book_key, chapter_num)
-                except Exception as e:
-                    error_message = f"❌ Failed to process {book_key} {chapter_num}: {e}"
-                    print(error_message)
-                    error_log.write(f"{error_message}\n")
-
-if __name__ == "__main__":
-    main()
