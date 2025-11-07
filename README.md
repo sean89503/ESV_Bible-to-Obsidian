@@ -1,63 +1,159 @@
-ESV to Obsidian Markdown ConverterThis Python script fetches the entire English Standard Version (ESV) Bible, chapter by chapter, from the official ESV API. It parses the complex HTML responses and converts them into a set of clean, highly-interlinked Markdown files, perfectly formatted for use in an Obsidian.md vault.The final output is a complete, local, and navigable copy of the Bible, where cross-references are embedded, footnotes are linked, and navigation is seamless.FeaturesFull Bible Download: Iterates through every book and chapter to build a complete local copy.Obsidian-Native: Generates Markdown using Obsidian-specific features:[[Wikilink]] navigation for previous/next chapters and book indices.![[Embedded Links]] for all cross-references, allowing you to see context without leaving the page.> [!tip] callout blocks for cleanly grouped cross-references.[[Link|With Alias]] formatting for footnotes, linking to the exact note with the preceding word as the link text.Structured Output: Creates a clean folder structure, separating chapter files from footnote files.Smart Parsing:Correctly handles single-chapter books (Jude, 2 John, etc.).Parses complex cross-reference notation (e.g., "ch. 1:2-5", "ver. 6, 8").Links to external "Study Notes" if they exist in your vault (based on OBSIDIAN_NOTES path).Debug & Caching: Saves raw API responses as JSON files in a Debug folder. This caches your downloads, saving you from re-fetching data and respecting API rate limits.Example OutputThe script converts the API's HTML into clean, readable Markdown.Genesis 1.md (Partial Example)###### Navigation
->[!info ] **[[Bible]] | [[OUTLINE OF GENESIS|Outline]] | [[Genesis - Info|Info]] | ⏪ (Start of Bible) | [[Genesis|Chapters]] | [[Genesis 1|First (1)]] | [[Genesis 50|Last (50)]] | [[Genesis 2|Genesis 2 ⏩]]**
+# ESV Bible to Obsidian Markdown
 
-# Genesis 1
+This Python script fetches Bible chapters from the ESV API, parses the complex HTML response, and generates feature-rich Markdown files perfectly formatted for an Obsidian vault.
 
-## The Creation of the World
+It intelligently handles verses, section headings, footnotes, and cross-references, turning them into a deeply interlinked, navigable digital Bible.
+
+## Key Features
+
+  * **Full API Integration**: Fetches chapter data directly from the official ESV API.
+  * **Smart Caching**: Saves the raw JSON response for each chapter, so you can re-run the script without hitting the API every time.
+  * **Advanced HTML Parsing**: Uses BeautifulSoup to meticulously parse verses, headings, footnotes, and cross-reference markers.
+  * **Obsidian-Native Output**: Generates files using Obsidian-friendly Markdown, including:
+      * `[[Wikilinks]]` for all navigation.
+      * `![[Embeds]]` for cross-references.
+      * Callouts (`[!info]`, `[!tip]`) for navigation and metadata.
+  * **Automatic Navigation**: Creates a navigation header and footer for every chapter, linking to the previous/next chapter, book, and Bible index.
+  * **Structured Output**:
+      * Creates one Markdown file per chapter (e.g., `Genesis 1.md`).
+      * Generates separate, dedicated files for footnotes (e.g., `Footnotes for Genesis 1.md`).
+  * **Cross-Reference Engine**: Parses the ESV's complex cross-reference notation (e.g., "ch. 6:4-8; ver. 12") and converts each reference into an individual `![[Embed]]` link.
+  * **Study Note Integration**: Automatically checks for and embeds your personal study notes from a separate folder in your vault.
+
+-----
+
+## Example File Output
+
+The script generates clean, highly functional Markdown files. Here is a sample of the output for `Jude 1.md`:
+
+```md
+###### Navigation
+>[!info ] **[[Bible|Bible]] | [[OUTLINE OF JUDE|Outline]] | [[Jude - Info|Info]] | [[3 John 1|⏪ 3 John 1]] | [[Jude|Chapters]] | [[Jude 1|First (1)]] | [[Jude 1|Last (1)]] | [[Revelation 1|Revelation 1 ⏩]]**
+
+# Jude 1
+
+## Greeting
+
 ###### 1
-In the beginning, God created the heavens and the earth.
+Jude, a [[Footnotes for Jude 1#f1-1|servant]] of Jesus Christ and brother of James, <sup>1</sup>To those who are called, <sup>2</sup>beloved in God the Father and <sup>3</sup>kept [[Footnotes for Jude 1#f2-1|for]] Jesus Christ:
+
+> [!summary]- Study Notes
+> ![[STUDY NOTES FOR Jude 1_1|Study Notes]]
+***
+
 > [!tip]- Cross References
-> 1 **Job 38:4-7**
-> > ![[Job 38#4]]
-> > ![[Job 38#5]]
-> > ![[Job 38#6]]
-> > ![[Job 38#7]]
-> 1 **Psalm 33:6**
-> > ![[Psalm 33#6]]
-> 1 **John 1:1-3**
-> > ![[John 1#1]]
-> > ![[John 1#2]]
-> > ![[John 1#3]]
+> 1 **Romans 1:7**
+> ![[Romans 1#7]]
+> 1 **1 Corinthians 1:24**
+> ![[1 Corinthians 1#24]]
+> ---
+> 2 **1 Thessalonians 1:4**
+> ![[1 Thessalonians 1#4]]
+> 2 **2 Thessalonians 2:13**
+> ![[2 Thessalonians 2#13]]
+> ---
+> 3 **John 17:11, 15**
+> ![[John 17#11]]
+> ![[John 17#15]]
+>
 
-###### 2
-The earth was <sup>1</sup>without form and void, and darkness was over the face of the deep. And the Spirit of God was hovering over the face of the [[Footnotes for Genesis 1#f1-1|waters]].
-> [!tip]- Cross References
-> 1 **Jeremiah 4:23**
-> > ![[Jeremiah 4#23]]
+###### Navigation
+>[!info ] **[[Bible|Bible]] | [[OUTLINE OF JUDE|Outline]] | [[Jude - Info|Info]] | [[3 John 1|⏪ 3 John 1]] | [[Jude|Chapters]] | [[Jude 1|First (1)]] | [[Jude 1|Last (1)]] | [[Revelation 1|Revelation 1 ⏩]]**
+```
 
-...
-Footnotes/01 Genesis/Footnotes for Genesis 1.md# Footnotes for Genesis 1
+-----
 
->[!info] [[Bible]] | [[Genesis]] | **[[Genesis 1]]**
+## Setup & Configuration
 
-###### f1-1
-Or *[f]luttering*
-— Verse [[Genesis 1#2|1:2]]
-RequirementsPython 3.xThe requests and beautifulsoup4 Python libraries.An ESV API Key.Installation & SetupClone the Repositorygit clone [https://github.com/your-username/esv-obsidian.git](https://github.com/your-username/esv-obsidian.git)
-cd esv-obsidian
-Install Dependenciespip install -r requirements.txt
-(If no requirements.txt exists, install manually):pip install requests beautifulsoup4
-Get Your ESV API KeyGo to https://api.esv.org/.Create a free account.Register a new "Application."You will be given an API token (a long string).Set the Environment VariableThe script reads the API key from an environment variable named ESV_API_KEY.Windows (PowerShell):$env:ESV_API_KEY = "YOUR_API_KEY_HERE"
-(To set it permanently, search for "Edit the system environment variables").macOS / Linux:export ESV_API_KEY="YOUR_API_KEY_HERE"
-(Add this line to your ~/.bashrc or ~/.zshrc file to make it permanent).ConfigurationBefore running, open test.py and edit the configuration constants at the top:BASE_FOLDER: The root folder where your Bible Markdown files will be saved.Example: "C:/Users/YourName/Documents/MyVault/Bible"OBSIDIAN_NOTES: The path to your existing study notes folder within your vault. The script will link to these if they follow the naming convention STUDY NOTES FOR [Book] [Chapter]_[Verse].md.Example: "C:/Users/YourName/Documents/MyVault/Study Notes"DEBUG_FOLDER: The subfolder for caching API responses. The default (Path(BASE_FOLDER) / "Debug") is usually fine.UsageOnce configured, simply run the script from your terminal:python test.py
-The script will begin processing all books and chapters. It will print its progress to the console.👍 Skipping Book...: If the script finds the first chapter of a book (e.g., Genesis 1.md), it will skip the entire book, assuming it has already been processed.📄 Using cached HTML JSON...: If a raw JSON file is found in Debug, the script will use it instead of calling the API.To re-process a book, delete that book's folder from BASE_FOLDER and its corresponding JSON files from DEBUG_FOLDER.Output File StructureThe script will generate the following structure inside your BASE_FOLDER:C:/Users/YourName/Documents/MyVault/Bible/
-├── 01 Genesis/
+Before you can run the script, you must complete these four steps.
+
+### 1\. Get an ESV API Key
+
+You need a free API key from Crossway.
+
+1.  Go to [api.esv.org](https://api.esv.org/)
+2.  Create an account and register a new "application."
+3.  This will give you an API token (key).
+
+### 2\. Set Your Environment Variable
+
+The script reads your API key from an environment variable for security.
+
+Set an environment variable named `ESV_API_KEY` to the value of the token you just received.
+
+### 3\. Install Dependencies
+
+This script relies on `requests` for API calls and `BeautifulSoup` for parsing.
+
+```bash
+pip install requests beautifulsoup4
+```
+
+### 4\. Configure Paths in `test.py`
+
+You **must** edit the script to set the correct folder paths for your system.
+
+Open `test.py` and modify these variables at the top of the file:
+
+```python
+# The root folder where your Bible files will be generated
+BASE_FOLDER = "C:/Users/seans/Documents/Bible" 
+
+# The folder for storing cached API (JSON) responses
+DEBUG_FOLDER = Path(BASE_FOLDER) / "Debug" 
+
+# The path to your *existing* Obsidian vault folder containing study notes
+# This must match the format the script expects, e.g., 
+# "C:/Vault/Notes/STUDY NOTES FOR Genesis 1_1.md"
+OBSIDIAN_NOTES = "C:/Users/user/Documents/SecondBrain/Atlas/Sources/Bible/Study Notes"
+```
+
+-----
+
+## How to Run
+
+Once you have configured your paths and API key, simply run the script from your terminal:
+
+```bash
+python test.py
+```
+
+The script will process every book and chapter listed in the `BOOKS` dictionary.
+
+**Note:** The script is designed to be run incrementally. It checks if the first chapter of a book (e.g., `Genesis 1.md`) already exists. If it does, it will skip that entire book, assuming it has already been processed. To re-process a book, you must delete its folder from your `BASE_FOLDER`.
+
+## Output File Structure
+
+The script will create the following directory structure inside your `BASE_FOLDER`:
+
+```
+/Your-Base-Folder/
+├── /01 Genesis/
 │   ├── Genesis 1.md
 │   ├── Genesis 2.md
 │   └── ...
-├── 02 Exodus/
+├── /02 Exodus/
 │   ├── Exodus 1.md
 │   └── ...
-├── Footnotes/
-│   ├── 01 Genesis/
-│   │   ├── Footnotes for Genesis 1.md
-│   │   └── ...
-│   └── 02 Exodus/
-│       ├── Footnotes for Exodus 1.md
-│       └── ...
-└── Debug/
-    ├── 01_Genesis_1_raw.json
-    ├── 01_Genesis_1_cleaned.html
-    ├── 01_Genesis_2_raw.json
-    └── ...
-LicenseThis project is licensed under the MIT License. See the LICENSE file for details.Note: The ESV Bible text is copyrighted by Crossway. The ESV API's terms of service apply. This script is intended for personal and non-commercial use.
+├── /65 Jude/
+│   ├── Jude 1.md
+│   └── ...
+├── /Debug/
+│   ├── 01_Genesis_1_raw.json
+│   ├── 01_Genesis_2_raw.json
+│   ├── 65_Jude_1_raw.json
+│   └── ...
+└── /Footnotes/
+    ├── /01 Genesis/
+    │   ├── Footnotes for Genesis 1.md
+    │   └── ...
+    └── /65 Jude/
+        ├── Footnotes for Jude 1.md
+        └── ...
+```
+
+-----
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
